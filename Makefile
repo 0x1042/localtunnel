@@ -11,6 +11,7 @@ vet:
 	go vet ./...
 
 fmt:
+	go install mvdan.cc/gofumpt@latest
 	go mod tidy
 	gofumpt -l -w .
 
