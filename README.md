@@ -1,6 +1,8 @@
-# 本地端口映射
+# export local service to public 
 
-# 运行 
+# run
+
+download release
 
 ## server 
 

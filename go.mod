@@ -4,10 +4,10 @@ go 1.20
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/lmittmann/tint v0.3.2
+	github.com/lmittmann/tint v0.3.3
 	github.com/urfave/cli/v2 v2.25.3
-	golang.org/x/crypto v0.8.0
-	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
+	golang.org/x/crypto v0.9.0
+	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
 )
 
 require (

@@ -29,10 +29,10 @@ builds:
       - mips64
       - mips64le
 
-#    goarm:
-#      - 6
-#    goamd64:
-#      - v2
+    #    goarm:
+    #      - 6
+    #    goamd64:
+    #      - v2
     gomips:
       - hardfloat
       - softfloat
@@ -62,6 +62,9 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+    files:
+      - README.md
+
 checksum:
   name_template: 'checksums.txt'
 snapshot:
