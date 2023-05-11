@@ -13,8 +13,8 @@ func init() {
 	if os.Getenv("verbos") == "1" {
 		level = slog.LevelDebug
 	}
-	slog.SetDefault(slog.New(tint.Options{
+	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{
 		Level:      level,
 		TimeFormat: time.RFC3339,
-	}.NewHandler(os.Stderr)))
+	})))
 }
