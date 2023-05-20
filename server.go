@@ -50,13 +50,17 @@ func (svr *Server) Start() error {
 			slog.Error("accept fail.", slog.Any("err", err))
 			break
 		}
-		slog.Debug("incoming connection.", slog.String("remote", stream.RemoteAddr().String()))
+
+		remote := stream.RemoteAddr().String()
+		slog.Info("incoming connection.", slog.String("remote", remote))
 		Go("handle", func() {
+			defer func() {
+				if stream != nil {
+					_ = stream.Close()
+				}
+				slog.Info("client exit", slog.String("remote", remote))
+			}()
 			svr.handle(stream)
-			if stream != nil {
-				_ = stream.Close()
-			}
-			slog.Info("client exit")
 		})
 	}
 
@@ -148,7 +152,7 @@ func (svr *Server) handleHello(stream *net.TCPConn) error {
 
 	realPort := ln.Addr().(*net.TCPAddr).Port
 	packet := helloPacket(uint16(realPort))
-	slog.Debug("mapping port.", slog.Any("port", realPort))
+	slog.Info("mapping port.", slog.Any("port", realPort))
 	if _, err := stream.Write(packet); err != nil {
 		slog.Error("write hello message error", slog.Any("err", err))
 		return err

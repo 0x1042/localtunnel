@@ -8,8 +8,11 @@ builds:
   - binary: lt
     ldflags:
       - -s -w
+      - -X main.Version=v0.2.2
+      - -X main.Date={{ .Date }}
     tags:
       - netgo
+      - urfave_cli_no_docs
     env:
       - CGO_ENABLED=0
     goos:
@@ -17,9 +20,13 @@ builds:
       - windows
       - darwin
       - freebsd
+      - dragonfly
+      - netbsd
+      - openbsd
+      - solaris
 
     goarch:
-      - 386
+      - "386"
       - amd64
       - arm
       - arm64
@@ -29,10 +36,13 @@ builds:
       - mips64
       - mips64le
 
-    #    goarm:
-    #      - 6
-    #    goamd64:
-    #      - v2
+    goarm:
+      - "7"
+
+    goamd64:
+      - v2
+      # - v3
+
     gomips:
       - hardfloat
       - softfloat
@@ -40,9 +50,6 @@ builds:
     ignore:
       - goos: darwin
         goarch: 386 riscv64
-      - goos: linux
-        goarch: arm
-        goarm: 7
       - goarm: mips64
       - gomips: hardfloat
       - goos: windows
@@ -66,12 +73,12 @@ archives:
       - README.md
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"

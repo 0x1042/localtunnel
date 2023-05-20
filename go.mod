@@ -1,4 +1,4 @@
-module github.com/adamweixuan/lt
+module github.com/0x1042/localtunnel
 
 go 1.20
 
@@ -7,7 +7,7 @@ require (
 	github.com/lmittmann/tint v0.3.3
 	github.com/urfave/cli/v2 v2.25.3
 	golang.org/x/crypto v0.9.0
-	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
+	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
 )
 
 require (

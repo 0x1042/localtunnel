@@ -57,10 +57,6 @@ func parseChallengePacket(conn net.Conn) (uuid.UUID, error) {
 		return emptyUUID, err
 	}
 
-	// if ttype != challenge {
-	// 	return emptyUUID, errors.New("invalid message type ")
-	// }
-
 	id := make([]byte, 16)
 	if err := binary.Read(conn, binary.BigEndian, &id); err != nil {
 		return emptyUUID, err

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -19,9 +21,12 @@ type (
 func newApp(local, server action) *cli.App {
 	app := cli.NewApp()
 	app.Name = "lt"
-	app.Usage = "export local port to remote"
+	app.Usage = "export local port to public server"
 
 	app.Compiled = time.Now()
+
+	ver := fmt.Sprintf("%s. build at %s", Version, Date)
+	app.Version = ver
 
 	app.Authors = []*cli.Author{
 		{
@@ -29,6 +34,19 @@ func newApp(local, server action) *cli.App {
 			Email: "adamweixuan@gmail.com",
 		},
 	}
+
+	app.Flags = []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "verbos",
+			Value: false,
+			Usage: "verbos log",
+			Action: func(ctx *cli.Context, b bool) error {
+				UpdateLogger(slog.LevelDebug)
+				return nil
+			},
+		},
+	}
+
 	app.Commands = []*cli.Command{
 		newCliCmd(local),
 		newServCmd(server),
@@ -49,7 +67,7 @@ func newCliCmd(action func(*cli.Context) error) *cli.Command {
 				Required: true,
 			},
 			&cli.StringFlag{
-				Name:    "secret,s",
+				Name:    "secret",
 				Aliases: []string{"s"},
 				Usage:   "secret",
 				EnvVars: []string{envKey},
