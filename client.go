@@ -80,7 +80,6 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 	}
 
 	return client
-
 }
 
 func (c *Client) Start() error {

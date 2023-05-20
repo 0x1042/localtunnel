@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"time"
 
@@ -9,12 +10,18 @@ import (
 )
 
 func init() {
-	level := slog.LevelInfo
-	if os.Getenv("verbos") == "1" {
-		level = slog.LevelDebug
-	}
-	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+	logger := NewLevelHandler(slog.LevelInfo, os.Stderr)
+	slog.SetDefault(logger)
+}
+
+func UpdateLogger(level slog.Level) {
+	logger := NewLevelHandler(level, os.Stderr)
+	slog.SetDefault(logger)
+}
+
+func NewLevelHandler(level slog.Level, writer io.Writer) *slog.Logger {
+	return slog.New(tint.NewHandler(writer, &tint.Options{
 		Level:      level,
 		TimeFormat: time.RFC3339,
-	})))
+	}))
 }
