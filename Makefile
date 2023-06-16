@@ -1,7 +1,7 @@
 export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
-LDFLAGS := -s -w -X main.Version="v0.2.2" -X main.Date=$(shell date +"%Y-%m-%d")
-TARGET := bin/lt
+LDFLAGS := -s -w -X main.Version="v0.2.3" -X main.Date=$(shell date +"%Y-%m-%d")
+TARGET := bin/localtunnel
 
 .PHONY: fmt build vet clean
 
@@ -22,3 +22,5 @@ build: clean fmt vet
 build_linux:
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "$(LDFLAGS)" -o "$(TARGET)"
 
+lint:
+	golangci-lint run

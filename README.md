@@ -1,18 +1,35 @@
 # export local service to public 
 
-# run
+- [export local service to public](#export-local-service-to-public)
+- [`install`](#install)
+  - [`use go install`](#use-go-install)
+  - [`download release`](#download-release)
+- [start](#start)
+  - [server](#server)
+  - [client](#client)
 
-download release
+# `install`
 
+## `use go install`
+
+```
+go install github.com/0x1042/localtunnel@latest
+```
+
+## `download release`
+
+[download](https://github.com/0x1042/localtunnel/releases)
+
+# start
 ## server 
 
 ```shell
-lt server --help
+localtunnel server --help
 NAME:
-   lt server - start tunnel server
+   localtunnel server - start tunnel server
 
 USAGE:
-   lt server [command options] [arguments...]
+   localtunnel server [command options] [arguments...]
 
 OPTIONS:
    --port value, -p value    tunnel listen port (default: 7853)
@@ -23,12 +40,12 @@ OPTIONS:
 ## client
 
 ```shell
-lt client --help
+./localtunnel client --help
 NAME:
-   lt client - start tunnel client
+   localtunnel client - start tunnel client
 
 USAGE:
-   lt client [command options] [arguments...]
+   localtunnel client [command options] [arguments...]
 
 OPTIONS:
    --tunnel value, -t value  tunnel server addr

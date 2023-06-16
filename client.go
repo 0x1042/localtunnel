@@ -168,6 +168,5 @@ func (c *Client) handleConnect() error {
 
 func StartClient(localPort, mappingPort int, secret, tunnelAddr string) error {
 	client := NewClient(localPort, mappingPort, secret, tunnelAddr)
-	client.Start()
-	return nil
+	return client.Start()
 }

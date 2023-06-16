@@ -1,6 +1,6 @@
 package main
 
 var (
-	Version string = "dev"
-	Date    string = "unknown"
+	Version = "dev"
+	Date    = "unknown"
 )
