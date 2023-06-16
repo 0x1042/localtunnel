@@ -5,7 +5,7 @@ before:
     - go vet ./...
 
 builds:
-  - binary: lt
+  - binary: localtunnel
     ldflags:
       - -s -w
       - -X main.Version=v0.2.2

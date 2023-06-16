@@ -20,7 +20,7 @@ type (
 
 func newApp(local, server action) *cli.App {
 	app := cli.NewApp()
-	app.Name = "lt"
+	app.Name = "localtunnel"
 	app.Usage = "export local port to public server"
 
 	app.Compiled = time.Now()
