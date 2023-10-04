@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/binary"
 	"errors"
+	"log/slog"
 	"net"
 	"os"
 
 	"github.com/google/uuid"
-	"golang.org/x/exp/slog"
 )
 
 type (

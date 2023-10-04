@@ -3,11 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
+	"log/slog"
 	"net"
 
 	"github.com/google/uuid"
-	"golang.org/x/exp/slog"
 )
 
 type (
@@ -29,7 +28,7 @@ func (t ttype) String() string {
 	case fail:
 		return "fail"
 	default:
-		return fmt.Sprintf("unknown:%d", t)
+		return "unknown"
 	}
 }
 

@@ -2,11 +2,11 @@ package main
 
 import (
 	"io"
+	"log/slog"
 	"os"
 	"time"
 
 	"github.com/lmittmann/tint"
-	"golang.org/x/exp/slog"
 )
 
 func init() {

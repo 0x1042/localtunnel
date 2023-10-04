@@ -1,6 +1,9 @@
 export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
-LDFLAGS := -s -w -X main.Version="v0.2.3" -X main.Date=$(shell date +"%Y-%m-%d")
+
+TAGS=urfave_cli_no_docs,netgo
+BUILD=go build -tags $(TAGS) -trimpath
+LDFLAGS := -s -w -X main.Version="v0.2.4" -X main.Date=$(shell date +"%Y-%m-%d")
 TARGET := bin/localtunnel
 
 .PHONY: fmt build vet clean
@@ -17,10 +20,10 @@ fmt:
 	gofumpt -l -w .
 
 build: clean fmt vet
-	env CGO_ENABLED=0 go build -tags urfave_cli_no_docs,netgo -trimpath -ldflags "$(LDFLAGS)" -o "$(TARGET)"
+	env CGO_ENABLED=0 $(BUILD) -ldflags "$(LDFLAGS)" -o "$(TARGET)"
 
 build_linux:
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "$(LDFLAGS)" -o "$(TARGET)"
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(BUILD) -ldflags "$(LDFLAGS)" -o "$(TARGET)"
 
 lint:
-	golangci-lint run
+	golangci-lint run -v

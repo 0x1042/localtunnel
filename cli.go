@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 const (
@@ -25,8 +24,7 @@ func newApp(local, server action) *cli.App {
 
 	app.Compiled = time.Now()
 
-	ver := fmt.Sprintf("%s. build at %s", Version, Date)
-	app.Version = ver
+	app.Version = Version + ". build at " + Date
 
 	app.Authors = []*cli.Author{
 		{
