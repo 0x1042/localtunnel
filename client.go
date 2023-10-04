@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
+	"log/slog"
 	"net"
 	"os"
-
-	"golang.org/x/exp/slog"
+	"strconv"
 )
 
 type Client struct {
@@ -75,7 +74,7 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 		}
 		client.mappingPort = rport
 
-		mappingAddr := fmt.Sprintf("%s:%d", addr.IP.String(), rport)
+		mappingAddr := addr.IP.String() + ":" + strconv.FormatUint(uint64(rport), 10)
 		slog.Info("forward info", slog.String("to", mappingAddr))
 	}
 
@@ -152,7 +151,8 @@ func (c *Client) handleConnect() error {
 		os.Exit(1)
 	}
 
-	local, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", c.localPort))
+	addr := "localhost:" + strconv.FormatInt(int64(c.localPort), 10)
+	local, err := net.Dial("tcp", addr)
 	if err != nil {
 		slog.Error("dial localfail.", slog.Any("err", err))
 		os.Exit(1)

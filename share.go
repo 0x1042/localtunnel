@@ -2,14 +2,12 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"runtime"
 	"sync"
 	"unsafe"
-
-	"golang.org/x/exp/slog"
 )
 
 var (
@@ -58,15 +56,16 @@ const (
 
 func Go(name string, f func()) {
 	go func() {
+		name := "routine-[" + name + "]"
 		defer func() {
 			if err := recover(); err != nil {
 				var buf [stackSize]byte
 				n := runtime.Stack(buf[:], false)
-				msg := fmt.Sprintf("goroutine-[%s]", name)
-				slog.Error(msg, slog.Any("err", err), slog.String("stack", string(buf[:n])))
+
+				slog.Error(name, slog.Any("err", err), slog.String("stack", string(buf[:n])))
 			}
 		}()
-		slog.Debug(fmt.Sprintf("goroutine-[%s] start", name))
+		slog.Debug(name + " start")
 		f()
 	}()
 }
