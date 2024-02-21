@@ -8,7 +8,7 @@ builds:
   - binary: localtunnel
     ldflags:
       - -s -w
-      - -X main.Version=v0.2.2
+      - -X main.Version=v0.2.5
       - -X main.Date={{ .Date }}
     tags:
       - netgo

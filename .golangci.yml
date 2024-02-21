@@ -3,7 +3,6 @@ service:
 
 run:
   concurrency: 8
-  deadline: 20m
   build-tags:
     - integ
     - integfuzz
@@ -94,5 +93,4 @@ issues:
         - staticcheck
       text: "SA1019: rand.Seed has been deprecated"
   exclude-use-default: true
-  max-per-linter: 0
   max-same-issues: 0

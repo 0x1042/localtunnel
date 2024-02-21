@@ -2,24 +2,24 @@ export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
 
 TAGS=urfave_cli_no_docs,netgo
-BUILD=/opt/hostedtoolcache/go/1.21.2/x64/bin/go build -tags $(TAGS) -trimpath
-LDFLAGS := -s -w -X main.Version="v0.2.4" -X main.Date=$(shell date +"%Y-%m-%d")
+GOEXE=/opt/hostedtoolcache/go/1.22.0/x64/bin/go
+BUILD=$(GOEXE) build -tags $(TAGS) -trimpath
+LDFLAGS := -s -w -X main.Version="v0.2.5" -X main.Date=$(shell date +"%Y-%m-%d")
 TARGET := bin/localtunnel
 
-.PHONY: fmt build vet clean
+.PHONY: fmt build vet clean build_local
 
 clean:
 	rm -fr bin
 
 vet:
-	/opt/hostedtoolcache/go/1.21.2/x64/bin/go vet ./...
+	$(GOEXE) vet ./...
 
 fmt:
-	export GOROOT=/opt/hostedtoolcache/go/1.21.2/x64
-	/opt/hostedtoolcache/go/1.21.2/x64/bin/go install mvdan.cc/gofumpt@latest
-	/opt/hostedtoolcache/go/1.21.2/x64/bin/go version
-	/opt/hostedtoolcache/go/1.21.2/x64/bin/go env
-	/opt/hostedtoolcache/go/1.21.2/x64/bin/go mod tidy -v -go=1.21
+	export GOROOT=/opt/hostedtoolcache/go/1.22.0/x64
+	$(GOEXE) install mvdan.cc/gofumpt@latest
+	$(GOEXE) version
+	$(GOEXE) env
 	gofumpt -l -w .
 
 build: clean fmt vet
@@ -30,3 +30,8 @@ build_linux:
 
 lint:
 	golangci-lint run -v
+
+build_local:clean
+	gofumpt -l -w .
+	go vet ./...
+	env CGO_ENABLED=0 go build -tags $(TAGS) -trimpath -ldflags "$(LDFLAGS)" -o "$(TARGET)"
