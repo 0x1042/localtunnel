@@ -76,6 +76,8 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 
 		mappingAddr := addr.IP.String() + ":" + strconv.FormatUint(uint64(rport), 10)
 		slog.Info("forward info", slog.String("to", mappingAddr))
+	default:
+		panic("unhandled default case")
 	}
 
 	return client
@@ -100,6 +102,8 @@ func (c *Client) Start() error {
 			msg := parseFailPacket(c.tunnel)
 			slog.Error("receive error.", slog.String("err", msg))
 			os.Exit(1)
+		default:
+			panic("unhandled default case")
 		}
 
 	}

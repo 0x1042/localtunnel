@@ -106,6 +106,8 @@ func (svr *Server) handle(stream *net.TCPConn) {
 		packet := failPacket(ErrNoAuthRequred)
 		_, _ = stream.Write(packet)
 		return
+	default:
+		panic("unhandled default case")
 	}
 }
 

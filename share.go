@@ -61,7 +61,6 @@ func Go(name string, f func()) {
 			if err := recover(); err != nil {
 				var buf [stackSize]byte
 				n := runtime.Stack(buf[:], false)
-
 				slog.Error(name, slog.Any("err", err), slog.String("stack", string(buf[:n])))
 			}
 		}()

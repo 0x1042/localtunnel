@@ -38,7 +38,7 @@ func newApp(local, server action) *cli.App {
 			Name:  "verbos",
 			Value: false,
 			Usage: "verbos log",
-			Action: func(ctx *cli.Context, b bool) error {
+			Action: func(_ *cli.Context, b bool) error {
 				UpdateLogger(slog.LevelDebug)
 				return nil
 			},
