@@ -2,11 +2,11 @@ package main
 
 import (
 	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/hex"
 	"hash"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/sha3"
 )
 
 type Authenticator struct {
@@ -14,9 +14,9 @@ type Authenticator struct {
 }
 
 func NewAuthenticator(secret string) *Authenticator {
-	digest := sha3.Sum256([]byte(secret))
+	digest := sha256.New().Sum([]byte(secret))
 	return &Authenticator{
-		hasher: hmac.New(sha3.New256, digest[:]),
+		hasher: hmac.New(sha256.New, digest[:]),
 	}
 }
 

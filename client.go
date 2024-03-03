@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/binary"
-	"log/slog"
+	"errors"
+	"io"
 	"net"
 	"os"
 	"strconv"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Client struct {
@@ -19,12 +22,12 @@ type Client struct {
 func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 	addr, err := net.ResolveTCPAddr("tcp", tunnelAddr)
 	if err != nil {
-		slog.Error("invalid tunnel address.", slog.Any("err", err))
+		log.Error().Err(err).Msg("invalid tunnel address.")
 		os.Exit(1)
 	}
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
-		slog.Error("connect to tunnel fail", slog.Any("err", err))
+		log.Error().Err(err).Msg("connect to tunnel fail")
 		os.Exit(1)
 	}
 
@@ -37,45 +40,45 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 	if len(secret) > 0 {
 		client.author = NewAuthenticator(secret)
 		if err := client.handShake(client.tunnel); err != nil {
-			slog.Error("handShake fail.", slog.Any("err", err))
+			log.Error().Err(err).Msg("handShake fail.")
 			_ = client.tunnel.Close()
 			os.Exit(1)
 		}
 	}
 
-	slog.Info("client handShake success.")
+	log.Info().Msg("client handShake success.")
 
 	bs := helloPacket(uint16(mappingPort))
 
 	if _, err := client.tunnel.Write(bs); err != nil {
-		slog.Error("send hello fail.", slog.Any("err", err))
+		log.Error().Err(err).Msg("send hello fail.")
 		os.Exit(1)
 	}
 
 	var ttype ttype
 
 	if err := binary.Read(client.tunnel, binary.BigEndian, &ttype); err != nil {
-		slog.Error("read hello fail.", slog.Any("err", err))
+		log.Error().Err(err).Msg("read hello fail.")
 		os.Exit(1)
 	}
 
-	slog.Info("read message type.", slog.Any("ttype", ttype))
+	log.Info().Uint8("type", uint8(ttype)).Msg("read message type.")
 
 	switch ttype {
 	case fail:
 		msg := parseFailPacket(client.tunnel)
-		slog.Error("receive error.", slog.String("err", msg))
+		log.Error().Str("err", msg).Msg("receive error.")
 		os.Exit(1)
 	case hello:
 		rport, err := parseHelloPacket(client.tunnel)
 		if err != nil {
-			slog.Error("read hello fail.", slog.Any("err", err))
+			log.Error().Err(err).Msg("read hello fail.")
 			os.Exit(1)
 		}
 		client.mappingPort = rport
 
 		mappingAddr := addr.IP.String() + ":" + strconv.FormatUint(uint64(rport), 10)
-		slog.Info("forward info", slog.String("to", mappingAddr))
+		log.Info().Str("to", mappingAddr).Msg("forward info")
 	default:
 		panic("unhandled default case")
 	}
@@ -87,20 +90,25 @@ func (c *Client) Start() error {
 	for {
 		var ttype ttype
 		if err := binary.Read(c.tunnel, binary.BigEndian, &ttype); err != nil {
-			slog.Error("read fail.", slog.Any("err", err))
+			if errors.Is(err, io.EOF) {
+				log.Warn().Msg("server shutdown.")
+			} else {
+				log.Error().Err(err).Msg("read fail.")
+			}
 			os.Exit(1)
 		}
 
-		slog.Info("ttype ", slog.Any("ttype", ttype))
+		log.Info().Uint8("type", uint8(ttype)).Msg("receive request")
+
 		switch ttype {
 		case connect:
 			if err := c.handleConnect(); err != nil {
-				slog.Error("connect fail.", slog.Any("err", err))
+				log.Error().Err(err).Msg("connect fail.")
 				os.Exit(1)
 			}
 		case fail:
 			msg := parseFailPacket(c.tunnel)
-			slog.Error("receive error.", slog.String("err", msg))
+			log.Error().Str("err", msg).Msg("receive error.")
 			os.Exit(1)
 		default:
 			panic("unhandled default case")
@@ -115,11 +123,11 @@ func (c *Client) handShake(remote net.Conn) error {
 		return err
 	}
 
-	slog.Info("client handShake.", slog.Any("id", uid.String()))
+	log.Info().Str("id", uid.String()).Msg("client handShake.")
 
 	sign := c.author.Sign(uid)
 
-	slog.Debug("client handShake. sign ", slog.Any("sign", sign))
+	log.Debug().Str("sign", sign).Msg("client handShake. sign ")
 
 	bs := authPacket(sign)
 
@@ -140,33 +148,31 @@ func (c *Client) handleConnect() error {
 	}
 
 	if c.author != nil {
-		slog.Debug("client handShake")
+		log.Debug().Msg("client handShake")
 		if err := c.handShake(remote); err != nil {
-			slog.Error("handShake fail.", slog.Any("err", err))
+			log.Error().Err(err).Msg("handShake fail.")
 			os.Exit(1)
 		}
 	}
-	slog.Debug("client handShake success")
+	log.Debug().Msg("client handShake success")
 
 	packet := transferOrConnectPacket(uid, transfer)
 
 	if _, err := remote.Write(packet); err != nil {
-		slog.Error("Write fail.", slog.Any("err", err))
+		log.Error().Err(err).Msg("Write fail.")
 		os.Exit(1)
 	}
 
 	addr := "localhost:" + strconv.FormatInt(int64(c.localPort), 10)
 	local, err := net.Dial("tcp", addr)
 	if err != nil {
-		slog.Error("dial localfail.", slog.Any("err", err))
+		log.Error().Err(err).Msg("dial localfail.")
 		os.Exit(1)
 	}
 
 	inCount, outCount, _ := relay(local, remote)
 
-	slog.Info("forward success.", slog.Int64("read_size", inCount),
-		slog.Int64("write_size", outCount))
-
+	log.Info().Int64("in_size", inCount).Int64("out_size", outCount).Msg("forward success")
 	return nil
 }
 

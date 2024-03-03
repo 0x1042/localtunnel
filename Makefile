@@ -4,7 +4,9 @@ export GO111MODULE=on
 TAGS=urfave_cli_no_docs,netgo
 GOEXE=/opt/hostedtoolcache/go/1.22.0/x64/bin/go
 BUILD=$(GOEXE) build -tags $(TAGS) -trimpath
-LDFLAGS := -s -w -X main.Version="v0.2.5" -X main.Date=$(shell date +"%Y-%m-%d")
+VER=$(shell git rev-parse --short HEAD)
+DATE=$(shell date +"%Y-%m-%d")
+LDFLAGS := -s -w -X main.Version=$(VER) -X main.Date=$(DATE)
 TARGET := bin/localtunnel
 
 .PHONY: fmt build vet clean build_local

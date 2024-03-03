@@ -1,10 +1,10 @@
 package main
 
 import (
-	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -26,6 +26,6 @@ func main() {
 	}
 
 	if err := newApp(local, server).Run(os.Args); err != nil {
-		slog.Error("start error.", slog.Any("err", err))
+		log.Fatal().Err(err).Msg("start error.")
 	}
 }
