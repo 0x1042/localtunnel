@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/binary"
 	"errors"
-	"log/slog"
 	"net"
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type (
@@ -38,27 +38,27 @@ func NewServer(port int, secret string) *Server {
 func (svr *Server) Start() error {
 	ln, err := net.ListenTCP("tcp", svr.addr)
 	if err != nil {
-		slog.Error("server listen error", slog.Any("err", err))
+		log.Error().Err(err).Msg("server listen error")
 		os.Exit(1)
 	}
 
-	slog.Info("server listen success.", slog.Any("addr", ln.Addr().String()))
+	log.Info().Str("addr", ln.Addr().String()).Msg("server listen success.")
 
 	for {
 		stream, err := ln.AcceptTCP()
 		if err != nil {
-			slog.Error("accept fail.", slog.Any("err", err))
+			log.Error().Err(err).Msg("accept fail.")
 			break
 		}
 
 		remote := stream.RemoteAddr().String()
-		slog.Info("incoming connection.", slog.String("remote", remote))
+		log.Info().Str("remote", remote).Msg("incoming connection.")
 		Go("handle", func() {
 			defer func() {
 				if stream != nil {
 					_ = stream.Close()
 				}
-				slog.Info("client exit", slog.String("remote", remote))
+				log.Info().Str("remote", remote).Msg("client exit.")
 			}()
 			svr.handle(stream)
 		})
@@ -70,39 +70,39 @@ func (svr *Server) Start() error {
 func (svr *Server) handle(stream *net.TCPConn) {
 	// 鉴权
 	if svr.author != nil {
-		slog.Debug("handshake start")
+		log.Debug().Msg("handshake start")
 		if err := svr.handshake(stream); err != nil {
-			slog.Error("handshake fail", slog.Any("err", err))
+			log.Error().Err(err).Msg("handshake fail")
 			packet := failPacket(err)
 			_, _ = stream.Write(packet)
 			return
 		}
 	}
 
-	slog.Debug("handshake success")
+	log.Debug().Msg("handshake success")
 
 	var newType ttype
 
 	if err := binary.Read(stream, binary.BigEndian, &newType); err != nil {
-		slog.Error("read fail", slog.Any("err", err))
+		log.Error().Err(err).Msg("read fail")
 		return
 	}
 
-	slog.Debug("message type", slog.Any("ttype", newType))
+	log.Debug().Uint8("ttype", uint8(newType)).Msg("message info")
 
 	switch newType {
 
 	case hello:
 		if err := svr.handleHello(stream); err != nil {
-			slog.Error("client handShake error", slog.Any("err", err))
+			log.Error().Err(err).Msg("client handShake error")
 		}
 
 	case transfer:
 		if err := svr.handleTransfer(stream); err != nil {
-			slog.Error("client transfer error", slog.Any("err", err))
+			log.Error().Err(err).Msg("client transfer error")
 		}
 	case auth:
-		slog.Error("unexpect auth message")
+		log.Error().Msg("unexpect auth message")
 		packet := failPacket(ErrNoAuthRequred)
 		_, _ = stream.Write(packet)
 		return
@@ -114,7 +114,7 @@ func (svr *Server) handle(stream *net.TCPConn) {
 func (svr *Server) handshake(stream *net.TCPConn) error {
 	id := uuid.New()
 
-	slog.Debug("handshake start,write to client", slog.String("id", id.String()))
+	log.Debug().Str("id", id.String()).Msg("handshake start,write to client")
 
 	// 1. send
 	if _, err := stream.Write(challengePacket(id)); err != nil {
@@ -137,7 +137,7 @@ func (svr *Server) handshake(stream *net.TCPConn) error {
 func (svr *Server) handleHello(stream *net.TCPConn) error {
 	port, err := parseHelloPacket(stream)
 	if err != nil {
-		slog.Error("read hello message error", slog.Any("err", err))
+		log.Error().Err(err).Msg("read hello message error")
 		return err
 	}
 
@@ -148,26 +148,28 @@ func (svr *Server) handleHello(stream *net.TCPConn) error {
 
 	ln, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		slog.Error("listen error", slog.Any("err", err), slog.String("addr", addr.String()))
+		log.Error().Err(err).Str("addr", addr.String()).Msg("listen error")
 		return err
 	}
 
 	realPort := ln.Addr().(*net.TCPAddr).Port
 	packet := helloPacket(uint16(realPort))
-	slog.Info("mapping port.", slog.Any("port", realPort))
+
+	log.Info().Int("port", realPort).Msg("mapping port.")
+
 	if _, err := stream.Write(packet); err != nil {
-		slog.Error("write hello message error", slog.Any("err", err))
+		log.Error().Err(err).Msg("write hello message error")
 		return err
 	}
 
 	for {
 		incoming, err := ln.AcceptTCP()
 		if err != nil {
-			slog.Error("accept error", slog.Any("err", err))
+			log.Error().Err(err).Msg("accept error")
 			break
 		}
 
-		slog.Debug("incoming request")
+		log.Debug().Msg("incoming request")
 
 		id := uuid.New()
 		svr.connStore.Store(id.String(), incoming)
@@ -175,14 +177,14 @@ func (svr *Server) handleHello(stream *net.TCPConn) error {
 		packet := transferOrConnectPacket(id, connect)
 
 		if _, err := stream.Write(packet); err != nil {
-			slog.Error("write error", slog.Any("err", err))
+			log.Error().Err(err).Msg("write error")
 		}
 	}
 	return nil
 }
 
 func (svr *Server) handleTransfer(stream *net.TCPConn) error {
-	slog.Debug("handle forward")
+	log.Debug().Msg("handle forward")
 	uid, err := parseTransferOrConnectPacket(stream)
 	if err != nil {
 		return err
@@ -197,10 +199,12 @@ func (svr *Server) handleTransfer(stream *net.TCPConn) error {
 	inCount, outCount, errs := relay(session, stream)
 
 	if errs != nil {
-		slog.Error("relay fail", slog.Any("err", errs))
+		log.Error().Err(err).Msg("relay fail")
 		return nil
 	}
-	slog.Info("forward success.", slog.Int64("read_size", inCount), slog.Int64("write_size", outCount))
+
+	log.Info().Int64("in_size", inCount).Int64("out_size", outCount).Msg("forward success.")
+
 	return nil
 }
 

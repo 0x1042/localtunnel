@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log/slog"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 )
 
@@ -39,7 +39,7 @@ func newApp(local, server action) *cli.App {
 			Value: false,
 			Usage: "verbos log",
 			Action: func(_ *cli.Context, b bool) error {
-				UpdateLogger(slog.LevelDebug)
+				UpdateLogger(zerolog.TraceLevel)
 				return nil
 			},
 		},

@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"io"
-	"log/slog"
 	"net"
 	"runtime"
 	"sync"
 	"unsafe"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -22,7 +23,7 @@ func relay(c1, c2 io.ReadWriteCloser) (inCount int64, outCount int64, errs []err
 	pipe := func(number int, from, to io.ReadWriteCloser, count *int64) {
 		defer func() {
 			if err := recover(); err != nil {
-				slog.Error("pipe panic.", slog.Any("err", err))
+				log.Error().Any("err", err).Msg("pipe panic.")
 			}
 		}()
 		defer func(to io.ReadWriteCloser) {
@@ -61,10 +62,10 @@ func Go(name string, f func()) {
 			if err := recover(); err != nil {
 				var buf [stackSize]byte
 				n := runtime.Stack(buf[:], false)
-				slog.Error(name, slog.Any("err", err), slog.String("stack", string(buf[:n])))
+				log.Error().Str("job", name).Any("err", err).Str("stack", string(buf[:n])).Msg("routine panic.")
 			}
 		}()
-		slog.Debug(name + " start")
+		log.Info().Str("job", name).Msg("routine start.")
 		f()
 	}()
 }

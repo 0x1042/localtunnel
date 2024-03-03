@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"log/slog"
 	"net"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type (
@@ -78,12 +78,12 @@ func authPacket(tag string) []byte {
 func parseFailPacket(conn net.Conn) string {
 	var size uint32
 	if err := binary.Read(conn, binary.BigEndian, &size); err != nil {
-		slog.Error("parseFailPacket err.", slog.Any("err", err))
+		log.Error().Err(err).Msg("parseFailPacket err.")
 		return ""
 	}
 	data := make([]byte, size)
 	if err := binary.Read(conn, binary.BigEndian, &data); err != nil {
-		slog.Error("parseFailPacket err.", slog.Any("err", err))
+		log.Error().Err(err).Msg("parseFailPacket err.")
 		return ""
 	}
 	return string(data)
