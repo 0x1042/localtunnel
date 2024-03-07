@@ -1,10 +1,10 @@
 package main
 
 import (
-	"time"
+	"context"
 
 	"github.com/rs/zerolog"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -13,47 +13,19 @@ const (
 	envKey = "LT_TOKEN"
 )
 
-type (
-	action = func(*cli.Context) error
-)
-
-func newApp(local, server action) *cli.App {
-	app := cli.NewApp()
-	app.Name = "localtunnel"
-	app.Usage = "export local port to public server"
-
-	app.Compiled = time.Now()
-
-	app.Version = Version + ". build at " + Date
-
-	app.Authors = []*cli.Author{
-		{
-			Name:  "wei.xuan",
-			Email: "adamweixuan@gmail.com",
+func verbos() *cli.BoolFlag {
+	return &cli.BoolFlag{
+		Name:  "verbos",
+		Value: false,
+		Usage: "verbos log",
+		Action: func(_ context.Context, _ *cli.Command, _ bool) error {
+			UpdateLogger(zerolog.TraceLevel)
+			return nil
 		},
 	}
-
-	app.Flags = []cli.Flag{
-		&cli.BoolFlag{
-			Name:  "verbos",
-			Value: false,
-			Usage: "verbos log",
-			Action: func(_ *cli.Context, b bool) error {
-				UpdateLogger(zerolog.TraceLevel)
-				return nil
-			},
-		},
-	}
-
-	app.Commands = []*cli.Command{
-		newCliCmd(local),
-		newServCmd(server),
-	}
-
-	return app
 }
 
-func newCliCmd(action func(*cli.Context) error) *cli.Command {
+func newCliCmd() *cli.Command {
 	return &cli.Command{
 		Name:  client,
 		Usage: "start tunnel client",
@@ -68,7 +40,7 @@ func newCliCmd(action func(*cli.Context) error) *cli.Command {
 				Name:    "secret",
 				Aliases: []string{"s"},
 				Usage:   "secret",
-				EnvVars: []string{envKey},
+				Sources: cli.EnvVars(envKey),
 			},
 			&cli.IntFlag{
 				Name:     "local",
@@ -84,11 +56,17 @@ func newCliCmd(action func(*cli.Context) error) *cli.Command {
 				DefaultText: "random",
 			},
 		},
-		Action: action,
+		Action: func(_ context.Context, cmd *cli.Command) error {
+			local := cmd.Int("local")
+			remote := cmd.Int("remote")
+			secret := cmd.String("secret")
+			tunnel := cmd.String("tunnel")
+			return StartClient(int(local), int(remote), secret, tunnel)
+		},
 	}
 }
 
-func newServCmd(action func(*cli.Context) error) *cli.Command {
+func newServCmd() *cli.Command {
 	return &cli.Command{
 		Name:  server,
 		Usage: "start tunnel server",
@@ -102,10 +80,14 @@ func newServCmd(action func(*cli.Context) error) *cli.Command {
 			&cli.StringFlag{
 				Name:    "secret",
 				Aliases: []string{"s"},
-				EnvVars: []string{envKey},
+				Sources: cli.EnvVars(envKey),
 				Usage:   "secret",
 			},
 		},
-		Action: action,
+		Action: func(_ context.Context, cmd *cli.Command) error {
+			port := cmd.Int("port")
+			secret := cmd.String("secret")
+			return StartServer(int(port), secret)
+		},
 	}
 }

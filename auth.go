@@ -16,7 +16,7 @@ type Authenticator struct {
 func NewAuthenticator(secret string) *Authenticator {
 	digest := sha256.New().Sum([]byte(secret))
 	return &Authenticator{
-		hasher: hmac.New(sha256.New, digest[:]),
+		hasher: hmac.New(sha256.New, digest),
 	}
 }
 
