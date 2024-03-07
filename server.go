@@ -155,7 +155,7 @@ func (svr *Server) handleHello(stream *net.TCPConn) error {
 	realPort := ln.Addr().(*net.TCPAddr).Port
 	packet := helloPacket(uint16(realPort))
 
-	log.Info().Int("port", realPort).Msg("mapping port.")
+	log.Info().Int("port", realPort).Str("remote", stream.RemoteAddr().String()).Msg("mapping port.")
 
 	if _, err := stream.Write(packet); err != nil {
 		log.Error().Err(err).Msg("write hello message error")
