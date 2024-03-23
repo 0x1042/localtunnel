@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 
-	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v3"
 )
 
@@ -19,8 +18,7 @@ func verbos() *cli.BoolFlag {
 		Value: false,
 		Usage: "verbos log",
 		Action: func(_ context.Context, _ *cli.Command, _ bool) error {
-			UpdateLogger(zerolog.TraceLevel)
-			return nil
+			return enableTrace()
 		},
 	}
 }

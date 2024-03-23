@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -39,7 +38,7 @@ func (svr *Server) Start() error {
 	ln, err := net.ListenTCP("tcp", svr.addr)
 	if err != nil {
 		log.Error().Err(err).Msg("server listen error")
-		os.Exit(1)
+		return err
 	}
 
 	log.Info().Str("addr", ln.Addr().String()).Msg("server listen success.")
@@ -199,11 +198,11 @@ func (svr *Server) handleTransfer(stream *net.TCPConn) error {
 	inCount, outCount, errs := relay(session, stream)
 
 	if errs != nil {
-		log.Error().Err(err).Msg("relay fail")
+		log.Error().Any("errors", errs).Msg("relay fail")
 		return nil
 	}
 
-	log.Info().Int64("in_size", inCount).Int64("out_size", outCount).Msg("forward success.")
+	log.Info().Int64("in", inCount).Int64("out", outCount).Msg("forward success.")
 
 	return nil
 }

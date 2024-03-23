@@ -11,10 +11,13 @@ import (
 func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
+		NoColor:    false,
 		TimeFormat: time.StampMilli,
 	})
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
 
-func UpdateLogger(level zerolog.Level) {
-	zerolog.SetGlobalLevel(level)
+func enableTrace() error {
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	return nil
 }
