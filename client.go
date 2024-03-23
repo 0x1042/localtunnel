@@ -12,29 +12,29 @@ import (
 )
 
 type Client struct {
-	tunnelAddr  *net.TCPAddr
-	tunnel      *net.TCPConn
-	author      *Authenticator
-	localPort   int
-	mappingPort uint16
+	addr       *net.TCPAddr
+	tunnel     *net.TCPConn
+	author     *Authenticator
+	localPort  int
+	targetPort uint16
 }
 
-func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
+func NewClient(localPort, mappingPort int, secret, tunnelAddr string) (*Client, error) {
 	addr, err := net.ResolveTCPAddr("tcp", tunnelAddr)
 	if err != nil {
 		log.Error().Err(err).Msg("invalid tunnel address.")
-		os.Exit(1)
+		return nil, err
 	}
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
 		log.Error().Err(err).Msg("connect to tunnel fail")
-		os.Exit(1)
+		return nil, err
 	}
 
 	client := &Client{
-		tunnel:     conn,
-		localPort:  localPort,
-		tunnelAddr: addr,
+		tunnel:    conn,
+		localPort: localPort,
+		addr:      addr,
 	}
 
 	if len(secret) > 0 {
@@ -42,7 +42,7 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 		if err := client.handShake(client.tunnel); err != nil {
 			log.Error().Err(err).Msg("handShake fail.")
 			_ = client.tunnel.Close()
-			os.Exit(1)
+			return nil, err
 		}
 	}
 
@@ -52,14 +52,14 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 
 	if _, err := client.tunnel.Write(bs); err != nil {
 		log.Error().Err(err).Msg("send hello fail.")
-		os.Exit(1)
+		return nil, err
 	}
 
 	var ttype ttype
 
 	if err := binary.Read(client.tunnel, binary.BigEndian, &ttype); err != nil {
 		log.Error().Err(err).Msg("read hello fail.")
-		os.Exit(1)
+		return nil, err
 	}
 
 	log.Info().Uint8("type", uint8(ttype)).Msg("read message type.")
@@ -68,14 +68,14 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 	case fail:
 		msg := parseFailPacket(client.tunnel)
 		log.Error().Str("err", msg).Msg("receive error.")
-		os.Exit(1)
+		return nil, errors.New("receive error")
 	case hello:
 		rport, err := parseHelloPacket(client.tunnel)
 		if err != nil {
 			log.Error().Err(err).Msg("read hello fail.")
-			os.Exit(1)
+			return nil, err
 		}
-		client.mappingPort = rport
+		client.targetPort = rport
 
 		mappingAddr := addr.IP.String() + ":" + strconv.FormatUint(uint64(rport), 10)
 		log.Info().Str("to", mappingAddr).Msg("forward info")
@@ -83,7 +83,7 @@ func NewClient(localPort, mappingPort int, secret, tunnelAddr string) *Client {
 		panic("unhandled default case")
 	}
 
-	return client
+	return client, nil
 }
 
 func (c *Client) Start() error {
@@ -142,7 +142,7 @@ func (c *Client) handleConnect() error {
 	if err != nil {
 		return err
 	}
-	remote, err := net.DialTCP("tcp", nil, c.tunnelAddr)
+	remote, err := net.DialTCP("tcp", nil, c.addr)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,11 @@ func (c *Client) handleConnect() error {
 	return nil
 }
 
-func StartClient(localPort, mappingPort int, secret, tunnelAddr string) error {
-	client := NewClient(localPort, mappingPort, secret, tunnelAddr)
+func StartClient(localPort, targetPort int, secret, addr string) error {
+	client, err := NewClient(localPort, targetPort, secret, addr)
+	if err != nil {
+		return err
+	}
+	log.Info().Msg("new client success.")
 	return client.Start()
 }

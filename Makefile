@@ -9,7 +9,11 @@ DATE=$(shell date +"%Y-%m-%d")
 LDFLAGS := -s -w -X main.Version=$(VER) -X main.Date=$(DATE)
 TARGET := bin/localtunnel
 
-.PHONY: fmt build vet clean build_local
+.PHONY: fmt build vet clean build_local info
+
+info:
+	@echo "go env"
+	go env
 
 clean:
 	rm -fr bin
@@ -18,13 +22,12 @@ vet:
 	$(GOEXE) vet ./...
 
 fmt:
-	export GOROOT=/opt/hostedtoolcache/go/1.22.0/x64
 	$(GOEXE) install mvdan.cc/gofumpt@latest
 	$(GOEXE) version
 	$(GOEXE) env
 	gofumpt -l -w .
 
-build: clean fmt vet
+build: info clean fmt vet
 	env CGO_ENABLED=0 $(BUILD) -ldflags "$(LDFLAGS)" -o "$(TARGET)"
 
 build_linux:
@@ -37,3 +40,7 @@ build_local:clean
 	gofumpt -l -w .
 	go vet ./...
 	env CGO_ENABLED=0 go build -tags $(TAGS) -trimpath -ldflags "$(LDFLAGS)" -o "$(TARGET)"
+
+update:
+	go get -u ./...
+	go mod tidy
