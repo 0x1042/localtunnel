@@ -2,7 +2,7 @@ export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
 
 TAGS=urfave_cli_no_docs,netgo
-GOEXE=/opt/hostedtoolcache/go/1.22.0/x64/bin/go
+GOEXE=go
 BUILD=$(GOEXE) build -tags $(TAGS) -trimpath
 VER=$(shell git rev-parse --short HEAD)
 DATE=$(shell date +"%Y-%m-%d")
