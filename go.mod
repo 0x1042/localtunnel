@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/google/uuid v1.6.0
 	github.com/rs/zerolog v1.33.0
-	github.com/urfave/cli/v3 v3.0.0-beta1
+	github.com/urfave/cli/v3 v3.4.1
 )
 
 require (
